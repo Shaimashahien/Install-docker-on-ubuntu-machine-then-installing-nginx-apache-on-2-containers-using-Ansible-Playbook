@@ -1,0 +1,73 @@
+  GNU nano 4.8                                               playbook.yml                                                          
+---
+- hosts: all
+  become: true
+
+  tasks:
+
+    - name: Install Docker
+      apt:
+        update_cache: yes
+        name: docker.io
+        state: present
+      notify: restart docker
+
+    - name: Install Docker Compose
+      apt:
+        name: docker-compose
+        state: present
+
+    - name: Start Docker service
+      systemd:
+        name: docker.service
+        enabled: true    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Verify Docker installation
+      command: docker run hello-world
+
+
+  tasks:
+    - name: Install Nginx
+      docker_container:
+        name: nginx
+        image: nginx
+        exposed_ports:
+         - 80:80
+        state: started
+      notify: restart nginx
+  
+  tasks:
+    - name: Install Apache
+      docker_container:
+        name: apache
+        image: httpd
+        exposed_ports:
+         - 81:80
+        state: started
+      notify: restart apache
+
+
+
+  handlers:
+
+    - name: restart docker
+      service:
+        name: docker
+        state: restarted
+
+    - name: restart nginx
+      docker_container:
+        name: nginx
+        image: nginx
+        state: started
+
+    - name: restart apache
+      docker_container:
+        name: apache
+        image: httpd
+        state: started
+
