@@ -10,7 +10,6 @@
         update_cache: yes
         name: docker.io
         state: present
-      notify: restart docker
 
     - name: Install Docker Compose
       apt:
@@ -20,8 +19,12 @@
     - name: Start Docker service
       systemd:
         name: docker.service
-        enabled: true    - name: Add user to docker group
-      user:
+        enabled: true  
+        state: started
+      notify: restart docker
+
+    - name: Add user to docker group
+     user:
         name: "{{ ansible_user }}"
         groups: docker
         append: yes
